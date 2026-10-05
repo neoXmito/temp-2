@@ -1,0 +1,119 @@
+\documentclass[10pt,a4paper]{article}
+\usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}\usepackage{lmodern}\usepackage[french]{babel}
+\usepackage[margin=1.4cm]{geometry}\usepackage{amsmath,amssymb,multicol,xcolor,enumitem}
+\usepackage[most]{tcolorbox}
+\setlength{\parindent}{0pt}\setlist{nosep,leftmargin=1.2em}
+\newtcolorbox{fbx}[1]{colback=orange!4,colframe=orange!70!black,fonttitle=\bfseries\small,title=#1,boxsep=2pt,left=3pt,right=3pt,top=2pt,bottom=2pt,before skip=4pt,after skip=4pt}
+\newcommand{\vect}[1]{\mathbf{#1}}
+\pagestyle{empty}
+\begin{document}
+\begin{center}{\Large\bfseries Formulaire -- Modélisation géométrique et cinématique des robots sériels}\\[2pt]
+{\small ENIB -- ZG6 / MRA-1 \quad (d'après le cours d'O.~Chocron)}\end{center}
+\begin{multicols}{2}\small
+
+\begin{fbx}{Notations}
+$c_i=\cos\theta_i,\ s_i=\sin\theta_i,\ c_{ij}=\cos(\theta_i+\theta_j),\ s_{ij}=\sin(\theta_i+\theta_j)$.\\
+${}^{i}X$ : grandeur exprimée dans $R_i$ ; ${}^{i}_{j}R$ (ou ${}^{i}R_j$) : orientation de $R_j$ dans $R_i$.\\
+Modélisation robotique = géométrie + algèbre + différentiation.
+\end{fbx}
+
+\begin{fbx}{Rotations élémentaires (sens direct)}
+\[R_X(\phi)=\begin{bmatrix}1&0&0\\0&c\phi&-s\phi\\0&s\phi&c\phi\end{bmatrix}\quad
+R_Y(\theta)=\begin{bmatrix}c\theta&0&s\theta\\0&1&0\\-s\theta&0&c\theta\end{bmatrix}\]
+\[R_Z(\psi)=\begin{bmatrix}c\psi&-s\psi&0\\s\psi&c\psi&0\\0&0&1\end{bmatrix}\qquad R^{-1}=R^T,\ \det R=1\]
+Les colonnes de ${}^0R_1$ sont les vecteurs $\vec x_1,\vec y_1,\vec z_1$ exprimés dans $R_0$.
+\end{fbx}
+
+\begin{fbx}{Euler ZYX (axes successifs) \,$\Leftrightarrow$\, RPY XYZ (axes fixes)}
+$\psi$ autour de $Z_0$, puis $\theta$ autour de $Y_1$, puis $\phi$ autour de $X_2$ :
+\[{}^0R_E=R_Z(\psi)R_Y(\theta)R_X(\phi)=\]
+\[\scriptsize\begin{bmatrix}c\psi c\theta & c\psi s\theta s\phi-s\psi c\phi & c\psi s\theta c\phi+s\psi s\phi\\
+s\psi c\theta & s\psi s\theta s\phi+c\psi c\phi & s\psi s\theta c\phi-c\psi s\phi\\
+-s\theta & c\theta s\phi & c\theta c\phi\end{bmatrix}\]
+RPY : roll $\phi$/$X_0$, pitch $\theta$/$Y_0$, yaw $\psi$/$Z_0$ (axes fixes) : même matrice.\\
+\textbf{Règle :} axes \emph{mobiles} $\Rightarrow$ on multiplie à droite ; axes \emph{fixes} $\Rightarrow$ on multiplie à gauche.
+\end{fbx}
+
+\begin{fbx}{Extraction des angles (Euler ZYX / RPY)}
+Cas général ($\cos\theta\neq0$) :
+\[\theta=\arcsin(-R_{31}),\qquad \psi=\mathrm{atan2}(R_{21},R_{11}),\]\[\phi=\mathrm{atan2}(R_{32},R_{33})\]
+Cas singulier ($\cos\theta=0$, $\theta=\pm\pi/2$) : on fixe $\psi=0$, $\phi=\mathrm{atan2}(-R_{12},R_{22})$.\\
+Singularité $\Rightarrow$ quaternions (4 paramètres, pas de singularité).
+\end{fbx}
+
+\begin{fbx}{Matrices de transformation homogène (4$\times$4)}
+\[{}^0T_1=\begin{bmatrix}{}^0R_1&{}^0\vect p_1\\ 0_{1,3}&1\end{bmatrix}\in SE(3),\qquad
+\begin{bmatrix}{}^0\vect p\\1\end{bmatrix}={}^0T_1\begin{bmatrix}{}^1\vect p\\1\end{bmatrix}\]
+${}^0R_1$ : orientation de $R_1$ dans $R_0$ ; ${}^0\vect p_1$ : origine $O_1$ exprimée dans $R_0$.\\[2pt]
+\textbf{Inverse :}\ ${}^1T_0=({}^0T_1)^{-1}=\begin{bmatrix}{}^0R_1^T&-{}^0R_1^T\,{}^0\vect p_1\\0_{1,3}&1\end{bmatrix}$ \ ($T^{-1}\neq T^T$).\\[2pt]
+\textbf{Composition :}\ ${}^0T_2={}^0T_1\,{}^1T_2=\begin{bmatrix}{}^0R_1{}^1R_2&{}^0R_1{}^1\vect p_2+{}^0\vect p_1\\0_{1,3}&1\end{bmatrix}$ (Chasles).\\[2pt]
+\textbf{Ordre :} canonique = Translation puis Rotation : $\begin{bmatrix}R&\vect t_0\\0&1\end{bmatrix}$ ; \og rotation puis translation\fg{} donne $\begin{bmatrix}R&R\,\vect t_1\\0&1\end{bmatrix}$.
+\end{fbx}
+
+\begin{fbx}{Chaîne cinématique série}
+\[{}^0T_E={}^0T_1\,{}^1T_2\cdots{}^{n-1}T_n\,{}^nT_E\]
+Articulation rotoïde : $q_i=\theta_i$ (rad) ; prismatique : $q_i=d_i$ (m).\\
+Rotoïde $\neq$ pivot (pivot = libre, rotoïde = commandée). Rotule = 3 rotoïdes concourantes ; hélicoïdale = rotoïde + prismatique liées (1 DDL).
+\end{fbx}
+
+\begin{fbx}{Convention de Denavit--Hartenberg (modifiée)}
+$\vec Z_i$ : axe de la liaison $i$ ; $\vec X_i$ : perpendiculaire commune de $\vec Z_i$ vers $\vec Z_{i+1}$ ; $O_i=\vec X_i\cap\vec Z_i$ ; $\vec Y_i$ complète le trièdre direct.\\
+$\sigma_i=0$ rotoïde, $\sigma_i=1$ prismatique.
+\begin{itemize}
+\item $\alpha_{i-1}$ : angle de $\vec Z_{i-1}$ à $\vec Z_i$ autour de $\vec X_{i-1}$
+\item $a_{i-1}$ : distance de $\vec Z_{i-1}$ à $\vec Z_i$ le long de $\vec X_{i-1}$
+\item $\theta_i$ : angle de $\vec X_{i-1}$ à $\vec X_i$ autour de $\vec Z_i$
+\item $d_i$ : distance de $\vec X_{i-1}$ à $\vec X_i$ le long de $\vec Z_i$
+\end{itemize}
+\[q_i=\sigma_i d_i+(1-\sigma_i)\theta_i\]
+\[{}^{i-1}T_i=\mathrm{Rot}(X,\alpha_{i-1})\,\mathrm{Trans}(X,a_{i-1})\,\mathrm{Rot}(Z,\theta_i)\,\mathrm{Trans}(Z,d_i)\]
+\[{}^{i-1}T_i=\begin{bmatrix}c\theta_i&-s\theta_i&0&a_{i-1}\\
+s\theta_i c\alpha_{i-1}&c\theta_i c\alpha_{i-1}&-s\alpha_{i-1}&-s\alpha_{i-1}d_i\\
+s\theta_i s\alpha_{i-1}&c\theta_i s\alpha_{i-1}&c\alpha_{i-1}&c\alpha_{i-1}d_i\\0&0&0&1\end{bmatrix}\]
+\textbf{Méthode :} placer les $\vec Z_i$ (axes) $\to$ perpendiculaires communes $\to$ $O_i$ $\to$ $\vec X_i$ $\to$ tableau $(\alpha_{i-1},a_{i-1},d_i,\theta_i)$ $\to$ matrices ${}^{i-1}T_i$.
+\end{fbx}
+
+\begin{fbx}{MGD et MGI}
+\textbf{MGD} ($q\to X$) : ${}^0P_E={}^0T_N\,{}^NP_E$, \ ${}^0R_E={}^0R_N\,{}^NR_E$ ; l'orientation se lit sur ${}^0R_E$ (par ex. Euler ZYX).\\
+\textbf{MGI} ($X\to q$) : problème non linéaire ; existence ($X\in$ espace de travail ?), solutions multiples (choisir la \og meilleure \fg{}), pas d'algorithme général : méthodes numériques ou analytiques (algébriques/géométriques).
+\end{fbx}
+
+\begin{fbx}{Cinématique du solide}
+Dérivation dans un repère mobile $R$ ($\boldsymbol\omega=\boldsymbol\omega_{R/R_0}$) :
+\[\Big(\tfrac{d\vect u}{dt}\Big)_0=\Big(\tfrac{d\vect u}{dt}\Big)_R+\boldsymbol\omega\times\vect u\qquad
+\vect u\ \text{fixe dans }R\Rightarrow\Big(\tfrac{d\vect u}{dt}\Big)_0=\boldsymbol\omega\times\vect u\]
+Torseur cinématique : $\{\mathcal V\}_O=\left\{\begin{smallmatrix}\boldsymbol\omega\\ \vect v_O\end{smallmatrix}\right\}$ ; \ BABAR : $\vect v_B=\vect v_A+\boldsymbol\omega\times\overrightarrow{AB}$.\\
+Accélération : $\vect a_B=\vect a_A+\dot{\boldsymbol\omega}\times\overrightarrow{AB}+\boldsymbol\omega\times(\boldsymbol\omega\times\overrightarrow{AB})$.
+\end{fbx}
+
+\begin{fbx}{MCD : matrice jacobienne}
+\[\begin{bmatrix}\boldsymbol\omega\\\vect v\end{bmatrix}=J(q)\,\dot q,\qquad J=\begin{bmatrix}J_\Omega\\J_V\end{bmatrix}\ (6\times n)\]
+\textbf{Lignes} : une ligne = un DDL cartésien (bloc haut : rotation, bloc bas : translation).\\
+\textbf{Colonnes} : une colonne = contribution de l'articulation $i$ :
+\[\text{rotoïde : }J_i=\begin{bmatrix}\vect z_i\\ \vect z_i\times(\vect p_E-\vect p_i)\end{bmatrix}\qquad\text{prismatique : }J_i=\begin{bmatrix}\vect 0\\\vect z_i\end{bmatrix}\]
+\[\begin{bmatrix}\boldsymbol\omega\\\vect v\end{bmatrix}=\sum_i\begin{bmatrix}\vect z_i\dot q_i\\ \vect z_i\times(\vect p_E-\vect p_i)\dot q_i\end{bmatrix}\]
+Changement de repère d'expression : ${}^0J=\begin{bmatrix}{}^0R_k&0\\0&{}^0R_k\end{bmatrix}{}^kJ$.
+\end{fbx}
+
+\begin{fbx}{MCI et singularités}
+MCI : $\dot q=J^{-1}(q)\begin{bmatrix}\boldsymbol\omega_d\\\vect v_d\end{bmatrix}$ (si $J$ carrée inversible).\\
+Singularité : $\det J(q)=0$ $\Rightarrow$ perte de DDL, vitesses articulaires infinies, MCI mal posé (lignes nulles ou liées, axes alignés/parallèles).
+\end{fbx}
+
+\begin{fbx}{Complément TD : Newton--Euler (formalisme de Craig)}
+\textbf{Récurrence avant} ($i=0\to n-1$, rotoïde d'axe $\vect e_{i+1}$ dans $R_{i+1}$, $R={}^{i+1}_{\ \ i}R=({}^{i}_{i+1}R)^T$) :
+\[{}^{i+1}\boldsymbol\omega_{i+1}=R\,{}^i\boldsymbol\omega_i+\dot\theta_{i+1}\vect e_{i+1}\]
+\[{}^{i+1}\dot{\boldsymbol\omega}_{i+1}=R\,{}^i\dot{\boldsymbol\omega}_i+R\,{}^i\boldsymbol\omega_i\times\dot\theta_{i+1}\vect e_{i+1}+\ddot\theta_{i+1}\vect e_{i+1}\]
+\[{}^{i+1}\vect v_{i+1}=R\big({}^i\vect v_i+{}^i\boldsymbol\omega_i\times{}^i\vect P_{i+1}\big)\]
+\[{}^{i+1}\dot{\vect v}_{i+1}=R\big({}^i\dot{\boldsymbol\omega}_i\times{}^i\vect P_{i+1}+{}^i\boldsymbol\omega_i\times({}^i\boldsymbol\omega_i\times{}^i\vect P_{i+1})+{}^i\dot{\vect v}_i\big)\]
+\[{}^{i}\dot{\vect v}_{G_i}={}^i\dot{\boldsymbol\omega}_i\times{}^i\vect P_{G_i}+{}^i\boldsymbol\omega_i\times({}^i\boldsymbol\omega_i\times{}^i\vect P_{G_i})+{}^i\dot{\vect v}_i\]
+Init : ${}^0\boldsymbol\omega_0={}^0\dot{\boldsymbol\omega}_0={}^0\vect v_0=\vect 0$, ${}^0\dot{\vect v}_0=\vect 0$ (ou $-\vect g$ pour inclure le poids).\\[2pt]
+\textbf{Efforts d'inertie :} ${}^iF_i=m_i\,{}^i\dot{\vect v}_{G_i}$, \quad ${}^iN_i=\mathfrak I_i\,{}^i\dot{\boldsymbol\omega}_i+{}^i\boldsymbol\omega_i\times\mathfrak I_i\,{}^i\boldsymbol\omega_i$.\\
+Si $\mathfrak I_i=\mathrm{diag}(I_x,I_y,I_z)$ : $\boldsymbol\omega\times\mathfrak I\boldsymbol\omega=\big((I_z-I_y)\omega_y\omega_z,\,(I_x-I_z)\omega_z\omega_x,\,(I_y-I_x)\omega_x\omega_y\big)$, nul si $I_x=I_y=I_z$.\\[2pt]
+\textbf{Récurrence arrière} ($i=n\to1$, init ${}^{n+1}f,{}^{n+1}n$ = effort extérieur, $\vect 0$ à vide) :
+\[{}^if_i={}^i_{i+1}R\,{}^{i+1}f_{i+1}+{}^iF_i\]
+\[{}^in_i={}^iN_i+{}^i_{i+1}R\,{}^{i+1}n_{i+1}+{}^i\vect P_{G_i}\times{}^iF_i+{}^i\vect P_{i+1}\times{}^i_{i+1}R\,{}^{i+1}f_{i+1}\]
+\textbf{Couples :} $\tau_i={}^in_i\cdot\vect e_i$ (rotoïde), $\tau_i={}^if_i\cdot\vect e_i$ (prismatique).
+\end{fbx}
+\end{multicols}
+\end{document}

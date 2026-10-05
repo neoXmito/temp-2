@@ -1,0 +1,239 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}\usepackage{lmodern}\usepackage[french]{babel}
+\usepackage[margin=2cm]{geometry}\usepackage{amsmath,amssymb,booktabs,xcolor,enumitem}
+\usepackage[most]{tcolorbox}\usepackage{fancyhdr}
+\pagestyle{fancy}\fancyhf{}\lhead{\small ENIB -- MRA-1}\rhead{\small Corrigé -- Préparation labo ABB Dynamique}\cfoot{\thepage}
+\setlength{\parindent}{0pt}\setlength{\parskip}{4pt}
+\newtcolorbox{res}{colback=green!4,colframe=green!45!black,boxsep=2pt,left=4pt,right=4pt,top=2pt,bottom=2pt}
+\newtcolorbox{rem}{colback=blue!3,colframe=blue!50!black,boxsep=2pt,left=4pt,right=4pt,top=2pt,bottom=2pt,fonttitle=\bfseries\small,title=Remarque}
+\newcommand{\dt}[1]{\dot\theta_{#1}}\newcommand{\ddt}[1]{\ddot\theta_{#1}}
+\newcommand{\dtt}{\dot\theta_{23}}\newcommand{\ddtt}{\ddot\theta_{23}}
+\newcommand{\col}[3]{\begin{bmatrix}#1\\#2\\#3\end{bmatrix}}
+\newcommand{\q}[1]{\section*{Question #1}\addcontentsline{toc}{section}{Question #1}}
+\allowdisplaybreaks
+\begin{document}
+\begin{center}{\LARGE\bfseries Corrigé détaillé}\\[4pt]{\large Travail préparatoire au labo ABB Dynamique -- Modèle dynamique inverse du porteur}\end{center}
+
+\section*{Conventions et hypothèses}
+\begin{itemize}
+\item $c_i=\cos\theta_i$, $s_i=\sin\theta_i$, $c_{23}=\cos(\theta_2+\theta_3)$, $s_{23}=\sin(\theta_2+\theta_3)$, $\dtt=\dt2+\dt3$, $\ddtt=\ddt2+\ddt3$.
+\item Lecture de la figure 2 : dans la configuration d'origine ($\theta_i=0$) \textbf{tous les repères sont parallèles} à $R_0$ ($\vec z$ vertical, $\vec x$ vers l'avant).
+$O_1$ est à la hauteur $a_1$ au-dessus de $O_0$ ; $O_2$ est décalé de $a_2$ selon $\vec x_1$ ; $O_3$ est à $a_3$ au-dessus de $O_2$ (selon $\vec z_2$) ; $O_E$ est à $a_4$ devant $O_3$ (selon $\vec x_3$).
+\item L'axe 1 est vertical ($\vec z_1$) ; les axes 2 et 3 sont horizontaux, portés par $\vec y_2$ et $\vec y_3$ (les moteurs dessinés en $O_2$ et $O_3$ sont orientés selon $\vec y$). La convention DH (axes portés par $\vec z$) n'est donc \emph{pas} respectée pour les axes 2 et 3.
+\item Formalisme de Newton--Euler de Craig ; ${}^{i}_{j}R$ : orientation de $R_j$ dans $R_i$, ${}^iP_j$ : position de $O_j$ dans $R_i$.
+\item \textbf{Centres de masse} (non précisés dans le sujet) : on les place sur l'axe géométrique de chaque segment :
+\[{}^1P_{G_1}=\col{g_1}{0}{0},\qquad {}^2P_{G_2}=\col{0}{0}{g_2},\qquad {}^3P_{G_3}=\col{g_3}{0}{0}.\]
+Le choix classique \og centre de masse au milieu du segment\fg{} correspond à $g_1=a_2/2$, $g_2=a_3/2$, $g_3=a_4/2$. Toutes les formules sont données avec $g_i$ quelconques.
+\end{itemize}
+On utilisera les matrices de rotation élémentaires :
+\[R_Z(\theta)=\begin{bmatrix}c&-s&0\\s&c&0\\0&0&1\end{bmatrix},\qquad R_Y(\theta)=\begin{bmatrix}c&0&s\\0&1&0\\-s&0&c\end{bmatrix},\qquad R_Y(\theta)^T=R_Y(-\theta).\]
+
+%=====================================================================
+\q{1 -- Axes, matrices de rotation et vecteurs position}
+Chaque repère $R_i$ se déduit du précédent par une rotation $\theta_i$ autour de son axe d'articulation (sens direct), son origine étant fixe dans $R_{i-1}$ :
+
+\begin{center}\renewcommand{\arraystretch}{1.6}
+\begin{tabular}{@{}cccc@{}}\toprule
+Repère & Axe et sens de $\theta_i$ & Rotation & Position \\\midrule
+$R_1$ & $\vec z_0=\vec z_1$, sens direct & ${}^0_1R=R_Z(\theta_1)=\begin{bmatrix}c_1&-s_1&0\\s_1&c_1&0\\0&0&1\end{bmatrix}$ & ${}^0P_1=\col{0}{0}{a_1}$\\[14pt]
+$R_2$ & $\vec y_1=\vec y_2$, sens direct & ${}^1_2R=R_Y(\theta_2)=\begin{bmatrix}c_2&0&s_2\\0&1&0\\-s_2&0&c_2\end{bmatrix}$ & ${}^1P_2=\col{a_2}{0}{0}$\\[14pt]
+$R_3$ & $\vec y_2=\vec y_3$, sens direct & ${}^2_3R=R_Y(\theta_3)=\begin{bmatrix}c_3&0&s_3\\0&1&0\\-s_3&0&c_3\end{bmatrix}$ & ${}^2P_3=\col{0}{0}{a_3}$\\[14pt]
+$R_E$ & aucun (effecteur lié à 3) & ${}^3_ER=I_3$ & ${}^3P_E=\col{a_4}{0}{0}$\\\bottomrule
+\end{tabular}\end{center}
+D'où les matrices homogènes ${}^{i-1}_{\ \ i}T=\begin{bmatrix}{}^{i-1}_{\ \ i}R&{}^{i-1}P_i\\000&1\end{bmatrix}$ :
+\[{}^0_1T=\begin{bmatrix}c_1&-s_1&0&0\\s_1&c_1&0&0\\0&0&1&a_1\\0&0&0&1\end{bmatrix}\!,\
+{}^1_2T=\begin{bmatrix}c_2&0&s_2&a_2\\0&1&0&0\\-s_2&0&c_2&0\\0&0&0&1\end{bmatrix}\!,\
+{}^2_3T=\begin{bmatrix}c_3&0&s_3&0\\0&1&0&0\\-s_3&0&c_3&a_3\\0&0&0&1\end{bmatrix}\!,\
+{}^3_ET=\begin{bmatrix}1&0&0&a_4\\0&1&0&0\\0&0&1&0\\0&0&0&1\end{bmatrix}\!.\]
+
+%=====================================================================
+\q{2 -- Matrice de transformation homogène ${}^0_ET$}
+\[{}^0_ET={}^0_1T\;{}^1_2T\;{}^2_3T\;{}^3_ET.\]
+\textbf{Rotation.} Deux rotations successives autour du même axe $\vec y$ s'additionnent : $R_Y(\theta_2)R_Y(\theta_3)=R_Y(\theta_2+\theta_3)$. Donc
+\[{}^0_ER=R_Z(\theta_1)R_Y(\theta_{23})=\begin{bmatrix}c_1c_{23}&-s_1&c_1s_{23}\\s_1c_{23}&c_1&s_1s_{23}\\-s_{23}&0&c_{23}\end{bmatrix}.\]
+\textbf{Position.} Par la relation de Chasles, exprimons d'abord $\overrightarrow{O_1O_E}$ dans $R_1$ :
+\[{}^1P_E={}^1P_2+{}^1_2R\,{}^2P_3+{}^1_3R\,{}^3P_E=\col{a_2}{0}{0}+\col{a_3s_2}{0}{a_3c_2}+\col{a_4c_{23}}{0}{-a_4s_{23}}=\col{a_2+a_3s_2+a_4c_{23}}{0}{a_3c_2-a_4s_{23}}.\]
+Puis ${}^0P_E={}^0P_1+{}^0_1R\,{}^1P_E$ :
+\begin{res}
+\[{}^0_ET=\begin{bmatrix}c_1c_{23}&-s_1&c_1s_{23}&c_1\,(a_2+a_3s_2+a_4c_{23})\\
+s_1c_{23}&c_1&s_1s_{23}&s_1\,(a_2+a_3s_2+a_4c_{23})\\
+-s_{23}&0&c_{23}&a_1+a_3c_2-a_4s_{23}\\0&0&0&1\end{bmatrix}\]
+\end{res}
+\textbf{Vérification avec la figure 2.}
+\begin{itemize}
+\item En $\theta_1=\theta_2=\theta_3=0$ : ${}^0_ER=I_3$ (repère effecteur parallèle à $R_0$, ce que montre la figure) et ${}^0P_E=(a_2+a_4,\ 0,\ a_1+a_3)^T$ : $O_E$ est devant la base de $a_2+a_4$ et à la hauteur $a_1+a_3$, exactement comme sur le schéma.
+\item Le terme $c_1,s_1$ en facteur de la distance horizontale $a_2+a_3s_2+a_4c_{23}$ traduit la rotation de tout le porteur autour de l'axe vertical : la hauteur $z_E$ ne dépend pas de $\theta_1$. 
+\item Pour $\theta_2=\pi/2$, $\theta_3=0$ : ${}^0P_E=(a_2+a_3,0,a_1-a_4)$ : le bras $a_3$ bascule vers l'avant (rotation directe autour de $\vec y$ : $\vec z\to\vec x$) et l'avant-bras $a_4$ pointe vers le bas : cohérent.
+\end{itemize}
+
+%=====================================================================
+\q{3 -- Vitesses par Newton--Euler (récurrence avant) et MCD}
+Formules (articulations rotoïdes d'axe $\vec e_{i+1}$ exprimé dans $R_{i+1}$) :
+\[{}^{i+1}\omega_{i+1}={}^{i+1}_{\ \ i}R\,{}^i\omega_i+\dot\theta_{i+1}\,\vec e_{i+1},\qquad
+{}^{i+1}v_{i+1}={}^{i+1}_{\ \ i}R\left({}^iv_i+{}^i\omega_i\times{}^iP_{i+1}\right).\]
+Ici $\vec e_1=(0,0,1)^T$, $\vec e_2=\vec e_3=(0,1,0)^T$, et ${}^{2}_{1}R=R_Y(-\theta_2)=\begin{bmatrix}c_2&0&-s_2\\0&1&0\\s_2&0&c_2\end{bmatrix}$, ${}^{3}_{2}R=R_Y(-\theta_3)$.
+
+\textbf{(0) Initialisation} (base fixe) : ${}^0\omega_0=\vec 0$, \ ${}^0v_0=\vec 0$.
+
+\textbf{(1)}
+\[{}^1\omega_1={}^1_0R\,\vec 0+\dt1\col001=\col00{\dt1},\qquad {}^1v_1={}^1_0R\left(\vec 0+\vec0\times{}^0P_1\right)=\col000.\]
+
+\textbf{(2)}
+\[{}^2\omega_2={}^2_1R\col00{\dt1}+\dt2\col010=\col{-s_2\dt1}{\dt2}{c_2\dt1}.\]
+${}^1\omega_1\times{}^1P_2=\col00{\dt1}\times\col{a_2}00=\col0{a_2\dt1}0$, \ et la rotation autour de $\vec y$ ne modifie pas la composante $y$ :
+\[{}^2v_2=\col{0}{a_2\dt1}{0}.\]
+
+\textbf{(3)}
+\[{}^3\omega_3=R_Y(-\theta_3)\col{-s_2\dt1}{\dt2}{c_2\dt1}+\dt3\col010=\col{-(c_3s_2+s_3c_2)\dt1}{\dt2+\dt3}{(c_3c_2-s_3s_2)\dt1}=\col{-s_{23}\dt1}{\dtt}{c_{23}\dt1}.\]
+${}^2\omega_2\times{}^2P_3=\col{-s_2\dt1}{\dt2}{c_2\dt1}\times\col00{a_3}=\col{a_3\dt2}{a_3s_2\dt1}{0}$, \ d'où ${}^2v_2+{}^2\omega_2\times{}^2P_3=\col{a_3\dt2}{(a_2+a_3s_2)\dt1}{0}$ et
+\[{}^3v_3=R_Y(-\theta_3)\col{a_3\dt2}{(a_2+a_3s_2)\dt1}{0}=\col{a_3c_3\dt2}{(a_2+a_3s_2)\dt1}{a_3s_3\dt2}.\]
+
+\textbf{(E)} ${}^E_3R=I_3$, aucune articulation :
+\[{}^E\omega_E={}^3\omega_3=\col{-s_{23}\dt1}{\dtt}{c_{23}\dt1},\]
+\[{}^3\omega_3\times{}^3P_E=\col{-s_{23}\dt1}{\dtt}{c_{23}\dt1}\times\col{a_4}00=\col{0}{a_4c_{23}\dt1}{-a_4\dtt},\qquad
+{}^Ev_E=\col{a_3c_3\dt2}{(a_2+a_3s_2+a_4c_{23})\dt1}{(a_3s_3-a_4)\dt2-a_4\dt3}.\]
+
+\textbf{MCD.} Comme $R_E$ et $R_3$ sont parallèles, ${}^3\omega_E={}^E\omega_E$ et ${}^3v_E={}^Ev_E$. En factorisant par $\dot\theta=(\dt1,\dt2,\dt3)^T$ :
+\begin{res}
+\[\begin{bmatrix}{}^3\omega_E\\{}^3v_E\end{bmatrix}={}^3J_E\,\dot\theta=
+\begin{bmatrix}-s_{23}&0&0\\0&1&1\\c_{23}&0&0\\ 0&a_3c_3&0\\a_2+a_3s_2+a_4c_{23}&0&0\\0&a_3s_3-a_4&-a_4\end{bmatrix}\col{\dt1}{\dt2}{\dt3}\]
+\end{res}
+On retrouve exactement la jacobienne donnée dans l'énoncé.
+\begin{rem}
+\textbf{Vérification par colonnes (cours).} Pour l'axe 3 : $\vec z_3\to\vec y$, $\vec y\times(a_4\vec x)=-a_4\vec z$ $\Rightarrow$ colonne $(0,1,0,0,0,-a_4)^T$. Pour l'axe 1 : $\vec z_0$ exprimé dans $R_3$ vaut $(-s_{23},0,c_{23})^T$ et le bras de levier horizontal est $a_2+a_3s_2+a_4c_{23}$, d'où une vitesse purement selon $\vec y_3$. 
+\end{rem}
+
+%=====================================================================
+\q{4 -- Accélérations par Newton--Euler (poids négligé)}
+Formules :
+\begin{align*}
+{}^{i+1}\dot\omega_{i+1}&={}^{i+1}_{\ \ i}R\,{}^i\dot\omega_i+\left({}^{i+1}_{\ \ i}R\,{}^i\omega_i\right)\times\dot\theta_{i+1}\vec e_{i+1}+\ddot\theta_{i+1}\vec e_{i+1}\\
+{}^{i+1}\dot v_{i+1}&={}^{i+1}_{\ \ i}R\left({}^i\dot\omega_i\times{}^iP_{i+1}+{}^i\omega_i\times({}^i\omega_i\times{}^iP_{i+1})+{}^i\dot v_i\right)\\
+{}^{i}\dot v_{G_i}&={}^i\dot\omega_i\times{}^iP_{G_i}+{}^i\omega_i\times({}^i\omega_i\times{}^iP_{G_i})+{}^i\dot v_i
+\end{align*}
+
+\textbf{(0) Initialisation} : ${}^0\dot\omega_0=\vec0$ ; poids négligé $\Rightarrow$ ${}^0\dot v_0=\vec 0$.\\
+{\small(Pour tenir compte du poids il suffirait de poser ${}^0\dot v_0=(0,0,g)^T$ : accélération fictive opposée à la pesanteur.)}
+
+\textbf{(1)}
+\[{}^1\dot\omega_1=\col00{\ddt1},\qquad {}^1\dot v_1=\vec 0\quad(\text{car }{}^0\omega_0={}^0\dot\omega_0={}^0\dot v_0=\vec0).\]
+Pour $G_1$ : ${}^1\dot\omega_1\times{}^1P_{G_1}=(0,\,g_1\ddt1,\,0)^T$ et ${}^1\omega_1\times({}^1\omega_1\times{}^1P_{G_1})=\col00{\dt1}\times\col0{g_1\dt1}0=(-g_1\dt1^2,0,0)^T$ :
+\[{}^1\dot v_{G_1}=\col{-g_1\dt1^2}{g_1\ddt1}{0}\quad\text{(centripète + tangentielle).}\]
+
+\textbf{(2)} ${}^2_1R\,{}^1\omega_1=(-s_2\dt1,0,c_2\dt1)^T$ ; \ $(-s_2\dt1,0,c_2\dt1)^T\times(0,\dt2,0)^T=(-c_2\dt1\dt2,\,0,\,-s_2\dt1\dt2)^T$ :
+\[{}^2\dot\omega_2=\col{-s_2\ddt1-c_2\dt1\dt2}{\ddt2}{c_2\ddt1-s_2\dt1\dt2}.\]
+${}^1\dot\omega_1\times{}^1P_2=(0,a_2\ddt1,0)^T$, \ ${}^1\omega_1\times({}^1\omega_1\times{}^1P_2)=(-a_2\dt1^2,0,0)^T$, puis rotation $R_Y(-\theta_2)$ :
+\[{}^2\dot v_2=R_Y(-\theta_2)\col{-a_2\dt1^2}{a_2\ddt1}{0}=\col{-a_2c_2\dt1^2}{a_2\ddt1}{-a_2s_2\dt1^2}.\]
+Pour $G_2$ (${}^2P_{G_2}=(0,0,g_2)^T$) :
+\[{}^2\dot\omega_2\times{}^2P_{G_2}=\col{g_2\ddt2}{g_2(s_2\ddt1+c_2\dt1\dt2)}{0},\qquad
+{}^2\omega_2\times({}^2\omega_2\times{}^2P_{G_2})=\col{-g_2s_2c_2\dt1^2}{g_2c_2\dt1\dt2}{-g_2(s_2^2\dt1^2+\dt2^2)}.\]
+En posant $X_2=a_2+g_2s_2$ (distance de $G_2$ à l'axe 1) :
+\[{}^2\dot v_{G_2}=\col{-c_2X_2\dt1^2+g_2\ddt2}{X_2\ddt1+2g_2c_2\dt1\dt2}{-s_2X_2\dt1^2-g_2\dt2^2}.\]
+
+\textbf{(3)} Même calcul qu'en (2) avec $\theta_2\to\theta_{23}$ et la vitesse $\dtt$ :
+\[{}^3\dot\omega_3=\col{-s_{23}\ddt1-c_{23}\dt1\dtt}{\ddtt}{c_{23}\ddt1-s_{23}\dt1\dtt}.\]
+Pour ${}^3\dot v_3$ : ${}^2\dot\omega_2\times{}^2P_3=a_3\big(\ddt2,\ s_2\ddt1+c_2\dt1\dt2,\ 0\big)^T$, \
+${}^2\omega_2\times({}^2\omega_2\times{}^2P_3)=a_3\big(-s_2c_2\dt1^2,\ c_2\dt1\dt2,\ -s_2^2\dt1^2-\dt2^2\big)^T$. En ajoutant ${}^2\dot v_2$ :
+\[{}^2\dot\omega_2\times{}^2P_3+{}^2\omega_2\times({}^2\omega_2\times{}^2P_3)+{}^2\dot v_2=
+\col{-c_2(a_2+a_3s_2)\dt1^2+a_3\ddt2}{(a_2+a_3s_2)\ddt1+2a_3c_2\dt1\dt2}{-s_2(a_2+a_3s_2)\dt1^2-a_3\dt2^2}\]
+puis on applique $R_Y(-\theta_3)$ (on utilise $c_3c_2-s_3s_2=c_{23}$, $s_3c_2+c_3s_2=s_{23}$) :
+\[{}^3\dot v_3=\col{-c_{23}(a_2+a_3s_2)\dt1^2+a_3(c_3\ddt2+s_3\dt2^2)}{(a_2+a_3s_2)\ddt1+2a_3c_2\dt1\dt2}{-s_{23}(a_2+a_3s_2)\dt1^2+a_3(s_3\ddt2-c_3\dt2^2)}.\]
+Pour $G_3$ (${}^3P_{G_3}=(g_3,0,0)^T$) :
+\[{}^3\dot\omega_3\times{}^3P_{G_3}=g_3\col{0}{c_{23}\ddt1-s_{23}\dt1\dtt}{-\ddtt},\qquad
+{}^3\omega_3\times({}^3\omega_3\times{}^3P_{G_3})=g_3\col{-c_{23}^2\dt1^2-\dtt^2}{-s_{23}\dt1\dtt}{-s_{23}c_{23}\dt1^2}.\]
+En posant $X_3=a_2+a_3s_2+g_3c_{23}$ (distance de $G_3$ à l'axe 1) :
+\begin{res}
+\[{}^3\dot v_{G_3}=\col{-c_{23}X_3\dt1^2+a_3(c_3\ddt2+s_3\dt2^2)-g_3\dtt^2}{X_3\ddt1+2\dt1\left(a_3c_2\dt2-g_3s_{23}\dtt\right)}{-s_{23}X_3\dt1^2+a_3(s_3\ddt2-c_3\dt2^2)-g_3\ddtt}\]
+\end{res}
+
+%=====================================================================
+\q{5 -- Efforts d'inertie $F_i$ et $N_i$}
+\[{}^iF_i=m_i\,{}^i\dot v_{G_i},\qquad {}^iN_i=\mathfrak I_i\,{}^i\dot\omega_i+{}^i\omega_i\times\mathfrak I_i\,{}^i\omega_i,\qquad
+\omega\times\mathfrak I\omega=\col{(I_z-I_y)\omega_y\omega_z}{(I_x-I_z)\omega_z\omega_x}{(I_y-I_x)\omega_x\omega_y}.\]
+
+\textbf{(1)} ${}^1\omega_1=(0,0,\dt1)$ est porté par un axe principal, donc le terme gyroscopique est nul :
+\[{}^1F_1=m_1\col{-g_1\dt1^2}{g_1\ddt1}{0},\qquad {}^1N_1=\col00{I_{z1}\ddt1}.\]
+
+\textbf{(2)}
+\[{}^2F_2=m_2\col{-c_2X_2\dt1^2+g_2\ddt2}{X_2\ddt1+2g_2c_2\dt1\dt2}{-s_2X_2\dt1^2-g_2\dt2^2},\]
+\[{}^2N_2=\col{-I_{x2}(s_2\ddt1+c_2\dt1\dt2)+(I_{z2}-I_{y2})c_2\dt1\dt2}{I_{y2}\ddt2+(I_{z2}-I_{x2})s_2c_2\dt1^2}{I_{z2}(c_2\ddt1-s_2\dt1\dt2)+(I_{x2}-I_{y2})s_2\dt1\dt2}.\]
+
+\textbf{(3)}
+\[{}^3F_3=m_3\,{}^3\dot v_{G_3}\ \text{(question 4)},\]
+\[{}^3N_3=\col{-I_{x3}(s_{23}\ddt1+c_{23}\dt1\dtt)+(I_{z3}-I_{y3})c_{23}\dt1\dtt}{I_{y3}\ddtt+(I_{z3}-I_{x3})s_{23}c_{23}\dt1^2}{I_{z3}(c_{23}\ddt1-s_{23}\dt1\dtt)+(I_{x3}-I_{y3})s_{23}\dt1\dtt}.\]
+
+%=====================================================================
+\q{6 -- Efforts de liaison (récurrence arrière)}
+\[{}^if_i={}^i_{i+1}R\,{}^{i+1}f_{i+1}+{}^iF_i,\qquad
+{}^in_i={}^iN_i+{}^i_{i+1}R\,{}^{i+1}n_{i+1}+{}^iP_{G_i}\times{}^iF_i+{}^iP_{i+1}\times{}^i_{i+1}R\,{}^{i+1}f_{i+1}.\]
+\textbf{(0) Initialisation} : robot à vide, pas d'effort sur l'effecteur : ${}^4f_4=\vec 0$, ${}^4n_4=\vec0$.
+
+Les couples utiles sont $\tau_3={}^3n_3\cdot\vec y$, $\tau_2={}^2n_2\cdot\vec y$, $\tau_1={}^1n_1\cdot\vec z$ ; on ne développe que ce qui sert.
+
+\textbf{(3)}
+\[{}^3f_3={}^3F_3,\qquad {}^3n_3={}^3N_3+\col{g_3}00\times{}^3F_3=\col{N_{3x}}{N_{3y}-g_3F_{3z}}{N_{3z}+g_3F_{3y}}.\]
+
+\textbf{(2)} Avec ${}^2_3R=R_Y(\theta_3)$ : ${}^2_3R\,{}^3f_3=\big(c_3F_{3x}+s_3F_{3z},\ F_{3y},\ -s_3F_{3x}+c_3F_{3z}\big)^T$.
+\[{}^2f_2=\col{c_3F_{3x}+s_3F_{3z}+F_{2x}}{F_{3y}+F_{2y}}{-s_3F_{3x}+c_3F_{3z}+F_{2z}}.\]
+${}^2P_{G_2}\times{}^2F_2=(-g_2F_{2y},\,g_2F_{2x},\,0)^T$ ; \ ${}^2P_3\times{}^2_3R\,{}^3f_3=\big(-a_3F_{3y},\ a_3(c_3F_{3x}+s_3F_{3z}),\ 0\big)^T$ :
+\[{}^2n_2=\col{N_{2x}+c_3n_{3x}+s_3n_{3z}-g_2F_{2y}-a_3F_{3y}}{N_{2y}+n_{3y}+g_2F_{2x}+a_3(c_3F_{3x}+s_3F_{3z})}{N_{2z}-s_3n_{3x}+c_3n_{3z}}.\]
+
+\textbf{(1)} Seule la composante $z$ de ${}^1n_1$ est utile. Avec ${}^1_2R=R_Y(\theta_2)$ : $({}^1_2R\,{}^2n_2)_z=-s_2n_{2x}+c_2n_{2z}$, \ $({}^1_2R\,{}^2f_2)_y=f_{2y}$ ; et $({}^1P_{G_1}\times{}^1F_1)_z=g_1F_{1y}$, $({}^1P_2\times{}^1_2R\,{}^2f_2)_z=a_2f_{2y}$ :
+\[{}^1f_1={}^1_2R\,{}^2f_2+{}^1F_1,\qquad n_{1z}=I_{z1}\ddt1-s_2n_{2x}+c_2n_{2z}+g_1F_{1y}+a_2(F_{2y}+F_{3y}).\]
+En remplaçant $n_{2x},n_{2z}$ puis $n_{3x},n_{3z}$ et en regroupant ($c_2c_3-s_2s_3=c_{23}$, $s_2c_3+c_2s_3=s_{23}$) :
+\[n_{1z}=I_{z1}\ddt1+\underbrace{(-s_2N_{2x}+c_2N_{2z})}_{\text{comp. verticale de }N_2}+\underbrace{(-s_{23}N_{3x}+c_{23}N_{3z})}_{\text{comp. verticale de }N_3}+g_1F_{1y}+X_2F_{2y}+X_3F_{3y}.\]
+\begin{rem}Interprétation : le couple sur l'axe vertical est la somme des moments verticaux des inerties de rotation plus les moments \og bras de levier $X_i$ $\times$ force tangentielle $F_{iy}$\fg{} de chaque centre de masse.\end{rem}
+
+%=====================================================================
+\q{7 -- Couples articulaires avec $I_{xi}=I_{yi}=I_{zi}=I_i$}
+Avec une inertie isotrope, $\omega\times\mathfrak I\omega=\vec0$, donc ${}^iN_i=I_i\,{}^i\dot\omega_i$. En particulier
+$N_{2y}=I_2\ddt2$, $N_{3y}=I_3\ddtt$, $-s_2N_{2x}+c_2N_{2z}=I_2\ddt1$, $-s_{23}N_{3x}+c_{23}N_{3z}=I_3\ddt1$ (les termes en $\dt1\dt2$ se compensent).
+
+\textbf{(3)} $\tau_3=n_{3y}=I_3\ddtt-g_3F_{3z}$ :
+\begin{res}
+\[\tau_3=\left(I_3+m_3g_3^2\right)\ddtt-m_3a_3g_3s_3\,\ddt2+m_3a_3g_3c_3\,\dt2^2+m_3g_3s_{23}\,X_3\,\dt1^2\]
+\end{res}
+
+\textbf{(2)} $\tau_2=n_{2y}=I_2\ddt2+I_3\ddtt-g_3F_{3z}+g_2F_{2x}+a_3(c_3F_{3x}+s_3F_{3z})$. Après développement :
+\begin{res}
+\begin{align*}
+\tau_2={}&\left[I_2+I_3+m_2g_2^2+m_3\left(a_3^2+g_3^2-2a_3g_3s_3\right)\right]\ddt2+\left[I_3+m_3\left(g_3^2-a_3g_3s_3\right)\right]\ddt3\\
+&-m_3a_3g_3c_3\left(2\dt2\dt3+\dt3^2\right)
+-\dt1^2\left[m_2g_2c_2\,X_2+m_3\,X_3\left(a_3c_2-g_3s_{23}\right)\right]
+\end{align*}
+\end{res}
+
+\textbf{(1)} $\tau_1=n_{1z}=(I_1+I_2+I_3)\ddt1+m_1g_1^2\ddt1+X_2F_{2y}+X_3F_{3y}$ :
+\begin{res}
+\begin{align*}
+\tau_1={}&\left[I_1+I_2+I_3+m_1g_1^2+m_2X_2^2+m_3X_3^2\right]\ddt1\\
+&+2\dt1\left[m_2g_2c_2X_2\,\dt2+m_3X_3\left(a_3c_2\,\dt2-g_3s_{23}\,\dtt\right)\right]
+\end{align*}
+avec $X_2=a_2+g_2s_2$ et $X_3=a_2+a_3s_2+g_3c_{23}$.
+\end{res}
+
+\begin{rem}
+\textbf{Contrôle par Lagrange.} L'inertie vue par l'axe 1 est $D_{11}=I_1+I_2+I_3+m_1g_1^2+m_2X_2^2+m_3X_3^2$ (Huygens avec les distances $X_i$ à l'axe vertical) et $\tau_1=\frac{d}{dt}(D_{11}\dt1)=D_{11}\ddt1+\dot D_{11}\dt1$ avec
+$\dot X_2=g_2c_2\dt2$, $\dot X_3=a_3c_2\dt2-g_3s_{23}\dtt$ : on retrouve exactement le résultat. De même, les termes en $\dt1^2$ de $\tau_2$ et $\tau_3$ valent $-\frac12\,\partial D_{11}/\partial\theta_j\;\dt1^2$ (effet centrifuge), ce qui valide les calculs.
+\end{rem}
+
+%=====================================================================
+\q{8 -- Couples au démarrage pour $\theta_i(t)=t$, $m_i=I_i=1$}
+À $t=0$ : $\theta_i=0$, $\dt i=1$, $\ddt i=0$. Donc $c_i=c_{23}=1$, $s_i=s_{23}=0$, $X_2=a_2$, $X_3=a_2+g_3$, $\dtt=2$, $\ddtt=0$.
+
+Les accélérations angulaires étant nulles, \textbf{les inerties $I_i$ n'interviennent pas} : seuls subsistent les effets centrifuges et de Coriolis.
+\begin{align*}
+\tau_1&=2\cdot1\cdot\left[a_2g_2\cdot1+(a_2+g_3)(a_3\cdot1-0)\right]=2\left(a_2g_2+a_2a_3+a_3g_3\right)\\
+\tau_2&=-a_3g_3(2+1)-1\cdot\left[g_2a_2+(a_2+g_3)a_3\right]=-\left(a_2g_2+a_2a_3+4a_3g_3\right)\\
+\tau_3&=a_3g_3\cdot1+g_3\cdot0=a_3g_3
+\end{align*}
+{\small Contrôle par les forces : $F_{2y}=2g_2$, $F_{3y}=2a_3$, $F_{2x}=-a_2$, $F_{3x}=-(a_2+g_3)-4g_3$, $F_{3z}=-a_3$ ; on retrouve $\tau_1=a_2F_{2y}+(a_2+g_3)F_{3y}$, $\tau_2=g_2F_{2x}-g_3F_{3z}+a_3F_{3x}$, $\tau_3=-g_3F_{3z}$.}
+
+\begin{res}
+Avec les centres de masse au milieu des segments ($g_1=\tfrac{a_2}2$, $g_2=\tfrac{a_3}2$, $g_3=\tfrac{a_4}2$) :
+\[\tau_1=3a_2a_3+a_3a_4,\qquad \tau_2=-\tfrac32a_2a_3-2a_3a_4,\qquad \tau_3=\tfrac12a_3a_4\quad(\text{en N·m pour des longueurs en m}).\]
+\end{res}
+\begin{rem}
+Le signe de $\tau_2<0$ : la rotation autour de l'axe 1 crée une force centrifuge horizontale sur les segments 2 et 3 qui tend à faire basculer le bras \og vers l'avant\fg{} ($\theta_2>0$) ; le moteur 2 doit la retenir. $\tau_3>0$ provient de l'accélération centripète de $O_3$ due à $\dt2$ (dirigée vers le bas), qui agit sur $G_3$ avec le bras de levier $g_3$.
+\end{rem}
+\end{document}
