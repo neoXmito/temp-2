@@ -1,0 +1,195 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}\usepackage[T1]{fontenc}\usepackage{lmodern}\usepackage[french]{babel}
+\usepackage[margin=2cm]{geometry}\usepackage{amsmath,amssymb,booktabs,xcolor,enumitem}
+\usepackage[most]{tcolorbox}\usepackage{fancyhdr}
+\pagestyle{fancy}\fancyhf{}\lhead{\small ENIB -- MRA-1}\rhead{\small Corrigé -- TD Cinématique (robot plan 2R)}\cfoot{\thepage}
+\setlength{\parindent}{0pt}\setlength{\parskip}{4pt}
+\newtcolorbox{res}{colback=green!4,colframe=green!45!black,boxsep=2pt,left=4pt,right=4pt,top=2pt,bottom=2pt}
+\newtcolorbox{rem}[1][Remarque]{colback=blue!3,colframe=blue!50!black,boxsep=2pt,left=4pt,right=4pt,top=2pt,bottom=2pt,fonttitle=\bfseries\small,title=#1}
+\newcommand{\dt}[1]{\dot\theta_{#1}}
+\newcommand{\col}[3]{\begin{bmatrix}#1\\#2\\#3\end{bmatrix}}
+\allowdisplaybreaks
+\begin{document}
+\begin{center}{\LARGE\bfseries Corrigé détaillé -- TD Cinématique}\\[4pt]{\large Robot plan à deux articulations rotoïdes}\end{center}
+
+\section*{Conventions}
+\begin{itemize}
+\item $c_i=\cos\theta_i$, $s_i=\sin\theta_i$, $c_{12}=\cos(\theta_1+\theta_2)$, $s_{12}=\sin(\theta_1+\theta_2)$.
+\item Repères (figure 2) : tous les axes $\vec Z_i$ sont perpendiculaires au plan (sortants), les deux articulations tournent autour de $\vec Z$.
+$R_1$ : origine $O_1=O_0$, $\vec X_1$ porté par le segment 1, tourné de $\theta_1$ par rapport à $R_0$.
+$R_2$ : origine au coude ($O_2$ à $L_1$ sur $\vec X_1$), $\vec X_2$ porté par le segment 2, tourné de $\theta_2$ par rapport à $R_1$.
+$R_3$ : origine $O_3$ en bout de segment 2 ($L_2$ sur $\vec X_2$), parallèle à $R_2$.
+\item Torseur cinématique écrit $\begin{bmatrix}\omega\\v\end{bmatrix}=J\dot\theta$ (rotation en haut, translation en bas, comme dans le cours).
+\end{itemize}
+
+%=====================================================================
+\section{Modélisation cinématique d'un robot plan}
+
+\subsection*{Question 1 -- Modèle géométrique direct (matrices homogènes 4$\times$4)}
+Rotations autour de $\vec Z$ : $R_Z(\theta)=\begin{bmatrix}c&-s&0\\s&c&0\\0&0&1\end{bmatrix}$.
+\[{}^0_1T=\begin{bmatrix}c_1&-s_1&0&0\\s_1&c_1&0&0\\0&0&1&0\\0&0&0&1\end{bmatrix},\qquad
+{}^1_2T=\begin{bmatrix}c_2&-s_2&0&L_1\\s_2&c_2&0&0\\0&0&1&0\\0&0&0&1\end{bmatrix},\qquad
+{}^2_3T=\begin{bmatrix}1&0&0&L_2\\0&1&0&0\\0&0&1&0\\0&0&0&1\end{bmatrix}.\]
+Par composition, $R_Z(\theta_1)R_Z(\theta_2)=R_Z(\theta_1+\theta_2)$ :
+\[{}^0_2T={}^0_1T\,{}^1_2T=\begin{bmatrix}c_{12}&-s_{12}&0&L_1c_1\\s_{12}&c_{12}&0&L_1s_1\\0&0&1&0\\0&0&0&1\end{bmatrix}\]
+\begin{res}
+\[{}^0_3T={}^0_2T\,{}^2_3T=\begin{bmatrix}c_{12}&-s_{12}&0&L_1c_1+L_2c_{12}\\s_{12}&c_{12}&0&L_1s_1+L_2s_{12}\\0&0&1&0\\0&0&0&1\end{bmatrix}\]
+\end{res}
+Posture de l'effecteur : $x=L_1c_1+L_2c_{12}$, \ $y=L_1s_1+L_2s_{12}$, \ orientation $\varphi=\theta_1+\theta_2$ (autour de $\vec Z_0$).\\
+\emph{Vérification} : pour $\theta_1=\theta_2=0$, $O_3=(L_1+L_2,0,0)$ (bras tendu sur $\vec X_0$).
+
+\subsection*{Question 2 -- Jacobienne ${}^0J_3$ par dérivation du MGD}
+On dérive la position de $O_3$ par rapport au temps :
+\[\dot x=-L_1s_1\dt1-L_2s_{12}(\dt1+\dt2),\qquad \dot y=L_1c_1\dt1+L_2c_{12}(\dt1+\dt2),\qquad \dot z=0.\]
+L'orientation $\varphi=\theta_1+\theta_2$ autour de $\vec Z_0$ donne ${}^0\omega_3=(0,0,\dt1+\dt2)^T$. D'où
+\begin{res}
+\[\begin{bmatrix}{}^0\omega_3\\{}^0v_3\end{bmatrix}={}^0J_3\,\dot\theta,\qquad
+{}^0J_3=\begin{bmatrix}0&0\\0&0\\1&1\\-L_1s_1-L_2s_{12}&-L_2s_{12}\\L_1c_1+L_2c_{12}&L_2c_{12}\\0&0\end{bmatrix}\]
+\end{res}
+\begin{rem}Seules 3 lignes sont non nulles ($\omega_z$, $v_x$, $v_y$) : un robot plan ne peut agir que sur 3 DDL du plan, et ici seulement 2 à la fois puisqu'il n'a que 2 articulations.\end{rem}
+
+\subsection*{Question 3 -- Torseurs cinématiques ${}^i\omega_i$, ${}^iv_i$ (récurrence avant)}
+\[{}^{i+1}\omega_{i+1}={}^{i+1}_{\ \ i}R\,{}^i\omega_i+\dot\theta_{i+1}\vec Z,\qquad
+{}^{i+1}v_{i+1}={}^{i+1}_{\ \ i}R\left({}^iv_i+{}^i\omega_i\times{}^iP_{i+1}\right),\qquad {}^{i+1}_{\ \ i}R=({}^i_{i+1}R)^T.\]
+\textbf{Initialisation} : base fixe, ${}^0\omega_0=\vec 0$, ${}^0v_0=\vec0$.
+
+\textbf{Segment 1} (${}^0P_1=\vec 0$) :
+\[{}^1\omega_1=\col00{\dt1},\qquad {}^1v_1=\col000\quad(O_1\text{ est fixe}).\]
+
+\textbf{Segment 2} : ${}^1P_2=(L_1,0,0)^T$, ${}^1\omega_1\times{}^1P_2=(0,L_1\dt1,0)^T$, et ${}^2_1R=R_Z(-\theta_2)=\begin{bmatrix}c_2&s_2&0\\-s_2&c_2&0\\0&0&1\end{bmatrix}$ :
+\[{}^2\omega_2=\col00{\dt1+\dt2},\qquad {}^2v_2={}^2_1R\col0{L_1\dt1}0=\col{L_1s_2\dt1}{L_1c_2\dt1}{0}.\]
+
+\textbf{Segment 3 (effecteur)} : ${}^3_2R=I_3$, ${}^2P_3=(L_2,0,0)^T$, ${}^2\omega_2\times{}^2P_3=(0,L_2(\dt1+\dt2),0)^T$ :
+\begin{res}
+\[{}^3\omega_3=\col00{\dt1+\dt2},\qquad {}^3v_3=\col{L_1s_2\dt1}{L_1c_2\dt1+L_2(\dt1+\dt2)}{0}\]
+\end{res}
+\emph{Interprétation} : dans $R_3$, la composante selon $\vec X_3$ (le long du segment 2) ne vient que de la rotation de l'axe 1 (bras de levier $L_1s_2$) ; la composante selon $\vec Y_3$ est la vitesse tangentielle.
+
+\subsection*{Question 4 -- Identification de ${}^3J_3$ et ${}^0J_3$}
+En factorisant ${}^3\omega_3$ et ${}^3v_3$ par $(\dt1,\dt2)$ :
+\begin{res}
+\[{}^3J_3=\begin{bmatrix}0&0\\0&0\\1&1\\L_1s_2&0\\L_1c_2+L_2&L_2\\0&0\end{bmatrix}\]
+\end{res}
+Pour ${}^0J_3$, on utilise les torseurs exprimés dans $R_0$ : ${}^0\omega_3={}^0_3R\,{}^3\omega_3=(0,0,\dt1+\dt2)^T$ (rotation autour de $\vec Z$ invariante) et ${}^0v_3={}^0_3R\,{}^3v_3$ avec ${}^0_3R=R_Z(\theta_{12})$ :
+\begin{align*}{}^0v_{3x}&=c_{12}L_1s_2\dt1-s_{12}\big[(L_1c_2+L_2)\dt1+L_2\dt2\big]=-L_1(s_{12}c_2-c_{12}s_2)\dt1-L_2s_{12}(\dt1+\dt2)\\&=-(L_1s_1+L_2s_{12})\dt1-L_2s_{12}\dt2\end{align*}
+\begin{align*}{}^0v_{3y}&=s_{12}L_1s_2\dt1+c_{12}\big[(L_1c_2+L_2)\dt1+L_2\dt2\big]=L_1(c_{12}c_2+s_{12}s_2)\dt1+L_2c_{12}(\dt1+\dt2)\\&=(L_1c_1+L_2c_{12})\dt1+L_2c_{12}\dt2\end{align*}
+(on a utilisé $s_{12}c_2-c_{12}s_2=\sin\theta_1=s_1$ et $c_{12}c_2+s_{12}s_2=\cos\theta_1=c_1$). On retrouve bien la matrice ${}^0J_3$ de la question 2.
+
+\subsection*{Question 5 -- Changement de base}
+Changer le repère d'\emph{expression} d'un torseur se fait bloc par bloc :
+\[{}^0J_3=\begin{bmatrix}{}^0_3R&0_3\\0_3&{}^0_3R\end{bmatrix}{}^3J_3,\qquad {}^0_3R=\begin{bmatrix}c_{12}&-s_{12}&0\\s_{12}&c_{12}&0\\0&0&1\end{bmatrix}.\]
+Bloc rotation : ${}^0_3R\,(0,0,1)^T=(0,0,1)^T$ pour chaque colonne. Bloc translation :
+\[{}^0_3R\col{L_1s_2}{L_1c_2+L_2}0=\col{-L_1s_1-L_2s_{12}}{L_1c_1+L_2c_{12}}0,\qquad {}^0_3R\col0{L_2}0=\col{-L_2s_{12}}{L_2c_{12}}0,\]
+(mêmes identités trigonométriques qu'en Q4) ce qui redonne exactement ${}^0J_3$. \textbf{Les trois méthodes concordent.}
+
+\begin{rem}[À retenir]
+Le déterminant ne dépend pas du repère d'expression : avec les lignes utiles $(v_x,v_y)$, $\det\,{}^3J=\det\,{}^0J=L_1L_2s_2$. ${}^3J_3$ est plus simple (pas de $\theta_1$) : il est souvent plus rapide de calculer la jacobienne dans le repère de l'effecteur puis de changer de base.
+\end{rem}
+
+%=====================================================================
+\section{Modélisation cinématique inverse d'un robot plan}
+
+\subsection*{Question 1 -- Singularités}
+On prend la partie translation (2 lignes non nulles) de la jacobienne, carrée $2\times2$ :
+\[\det\begin{bmatrix}L_1s_2&0\\L_1c_2+L_2&L_2\end{bmatrix}=L_1L_2\,s_2\quad(\text{même résultat avec }{}^0J_3).\]
+\begin{res}
+Singularités : $\sin\theta_2=0\iff\theta_2=0$ ou $\theta_2=\pi$ (quel que soit $\theta_1$).
+\end{res}
+\begin{itemize}
+\item $\theta_2=0$ : \textbf{bras tendu}, $O_3$ sur le cercle de rayon $L_1+L_2$ (frontière extérieure de l'espace de travail).
+\item $\theta_2=\pi$ : \textbf{bras replié}, $O_3$ sur le cercle de rayon $|L_1-L_2|$ (frontière intérieure ; si $L_1=L_2$, $O_3$ est sur l'axe 1).
+\end{itemize}
+\textbf{Caractérisation} : les deux segments sont alignés ; les deux colonnes de la jacobienne deviennent colinéaires (toutes deux perpendiculaires au bras). Le robot ne peut plus générer de vitesse dans la direction radiale $\overrightarrow{O_0O_3}$ : il perd un DDL instantanément.\\
+\textbf{Danger} : au voisinage, $J^{-1}$ contient $1/s_2$ : une vitesse cartésienne finie demande des vitesses articulaires qui tendent vers l'infini $\Rightarrow$ saturation des moteurs, perte du suivi de trajectoire, mouvements brusques dangereux pour l'environnement et les opérateurs ; de plus le MGI change de branche (coude haut/coude bas) en ces points.
+
+\subsection*{Question 2 -- Espace opérationnel et jacobienne opérationnelle}
+Le robot a 2 DDL : on ne peut commander que 2 coordonnées opérationnelles. On choisit la position de $O_3$ dans le plan : $X=(x,y)$ ; l'orientation $\varphi=\theta_1+\theta_2$ est alors subie.
+Espace de travail (sans butées) : la couronne $|L_1-L_2|\le\sqrt{x^2+y^2}\le L_1+L_2$.
+\begin{res}
+\[\begin{bmatrix}\dot x\\\dot y\end{bmatrix}=J_3^{op}\begin{bmatrix}\dt1\\\dt2\end{bmatrix},\qquad
+J_3^{op}=\begin{bmatrix}-L_1s_1-L_2s_{12}&-L_2s_{12}\\L_1c_1+L_2c_{12}&L_2c_{12}\end{bmatrix}=\begin{bmatrix}-y&-L_2s_{12}\\x&L_2c_{12}\end{bmatrix}\]
+\end{res}
+
+\subsection*{Question 3 -- Modèle cinématique inverse}
+$\det J_3^{op}=(-L_1s_1-L_2s_{12})L_2c_{12}+L_2s_{12}(L_1c_1+L_2c_{12})=L_1L_2(s_{12}c_1-c_{12}s_1)=L_1L_2s_2$. Hors singularité :
+\begin{res}
+\[\begin{bmatrix}\dt1\\\dt2\end{bmatrix}=\frac{1}{L_1L_2s_2}\begin{bmatrix}L_2c_{12}&L_2s_{12}\\-L_1c_1-L_2c_{12}&-L_1s_1-L_2s_{12}\end{bmatrix}\begin{bmatrix}\dot x\\\dot y\end{bmatrix}\]
+\end{res}
+\textbf{Et $\omega_3$ ?} Elle n'est pas commandée : elle découle du choix de $(\dot x,\dot y)$ :
+\[\omega_3=\dt1+\dt2=\frac{(L_2c_{12}-L_1c_1-L_2c_{12})\dot x+(L_2s_{12}-L_1s_1-L_2s_{12})\dot y}{L_1L_2s_2}=-\frac{c_1\dot x+s_1\dot y}{L_2\,s_2}.\]
+L'orientation de l'effecteur évolue donc librement (et devient elle aussi infinie près des singularités). Pour la contrôler il faudrait un 3$^\text{e}$ axe.
+
+\subsection*{Question 4 -- Suivi de la trajectoire rectiligne $V_{3/0}=1$ m/s, $y_3=0$}
+\textbf{Commande cinématique.} $\dot x=1$, $\dot y=0$ :
+\begin{res}
+\[\dt1=\frac{c_{12}}{L_1s_2},\qquad \dt2=-\frac{L_1c_1+L_2c_{12}}{L_1L_2s_2}=-\frac{x}{L_1L_2s_2},\qquad \omega_3=-\frac{c_1}{L_2s_2}.\]
+\end{res}
+\textbf{Conditions initiales.} Le point de départ $(x_0,0)$ doit appartenir à l'espace de travail : $|L_1-L_2|\le x_0\le L_1+L_2$. On obtient $(\theta_1(0),\theta_2(0))$ par le MGI ; sur l'axe $y=0$, $x=r$ :
+\[c_2=\frac{x_0^2-L_1^2-L_2^2}{2L_1L_2},\qquad \theta_2(0)=-\arccos(c_2)\ (\text{coude en haut, figure 3 : }\theta_2<0),\]
+\[\theta_1(0)=\mathrm{atan2}(0,x_0)-\mathrm{atan2}(L_2s_2,\,L_1+L_2c_2)=-\mathrm{atan2}(L_2s_2,\,L_1+L_2c_2)>0.\]
+La trajectoire est $x(t)=x_0+t$, $y(t)=0$, et on intègre $\dot\theta$ (ou on applique le MGI à chaque instant).
+
+Avec $s_2<0$ : $\dt2=x/(L_1L_2|s_2|)>0$, le coude s'ouvre ($\theta_2\to0^-$) ; $\dt1<0$, le bras s'abaisse vers l'axe $\vec X_0$.
+
+\textbf{Approche d'une singularité.} Quand $x\to L_1+L_2$, $\theta_2\to0$ donc $s_2\to0$ et $\dt1,\dt2\to\infty$. Plus précisément, en posant $x=L_1+L_2-\varepsilon$ :
+\[1-c_2\simeq\frac{(L_1+L_2)\,\varepsilon}{L_1L_2}\ \Rightarrow\ |s_2|\simeq\sqrt{\frac{2(L_1+L_2)\varepsilon}{L_1L_2}}\ \Rightarrow\ \dt2\simeq\sqrt{\frac{L_1+L_2}{2L_1L_2\,\varepsilon}}\ \xrightarrow[\varepsilon\to0]{}\ \infty.\]
+Les vitesses divergent en $1/\sqrt\varepsilon$. Les moteurs saturent, le robot ne peut plus suivre la consigne et au-delà de $L_1+L_2$ le point est inaccessible. Même phénomène à la frontière intérieure $x\to|L_1-L_2|$ ($\theta_2\to-\pi$).
+
+\textbf{Exemple numérique} ($L_1=L_2=1$ m, coude en haut ; alors $\theta_1=-\theta_2/2$ et $\dt1=-\dt2/2$) :
+\begin{center}\begin{tabular}{ccccc}\toprule
+$x$ (m)&$\theta_1$ (°)&$\theta_2$ (°)&$\dt1$ (rad/s)&$\dt2$ (rad/s)\\\midrule
+0,5 & 75,5 & $-151{,}0$ & $-0{,}516$ & 1,033\\
+1,0 & 60,0 & $-120{,}0$ & $-0{,}577$ & 1,155\\
+1,5 & 41,4 & $-82{,}8$ & $-0{,}756$ & 1,512\\
+1,9 & 18,2 & $-36{,}4$ & $-1{,}601$ & 3,203\\
+1,99 & 5,7 & $-11{,}5$ & $-5{,}006$ & 10,01\\
+1,999 & 1,8 & $-3{,}6$ & $-15{,}81$ & 31,63\\\bottomrule
+\end{tabular}\end{center}
+En pratique, on limite la trajectoire à l'intérieur de l'espace de travail (marge par rapport aux singularités), on ralentit la consigne, ou on utilise une inverse amortie (moindres carrés amortis).
+
+%=====================================================================
+\section{Modélisation statique d'un robot plan}
+Le robot exerce sur l'environnement la force ${}^3F=(f_x,f_y,0)^T$ en $O_3$, sans moment. On néglige le poids : équilibre statique.
+
+\subsection*{Question 1 -- Couples par récurrence arrière}
+\[{}^if_i={}^i_{i+1}R\,{}^{i+1}f_{i+1},\qquad {}^in_i={}^i_{i+1}R\,{}^{i+1}n_{i+1}+{}^iP_{i+1}\times{}^if_i,\qquad \tau_i={}^in_i\cdot\vec Z.\]
+\textbf{Effecteur} : ${}^3f_3=(f_x,f_y,0)^T$, ${}^3n_3=\vec 0$.
+
+\textbf{Segment 2} : ${}^2_3R=I_3$, ${}^2P_3=(L_2,0,0)^T$ :
+\[{}^2f_2=\col{f_x}{f_y}0,\qquad {}^2n_2=\col{L_2}00\times\col{f_x}{f_y}0=\col00{L_2f_y}\ \Rightarrow\ \tau_2=L_2f_y.\]
+
+\textbf{Segment 1} : ${}^1_2R=R_Z(\theta_2)$, ${}^1P_2=(L_1,0,0)^T$ :
+\[{}^1f_1=\col{c_2f_x-s_2f_y}{s_2f_x+c_2f_y}0,\qquad {}^1n_1=\col00{L_2f_y}+\col{L_1}00\times{}^1f_1=\col00{L_2f_y+L_1(s_2f_x+c_2f_y)}.\]
+\begin{res}
+\[\tau_1=L_1s_2\,f_x+(L_1c_2+L_2)\,f_y,\qquad \tau_2=L_2\,f_y\]
+\end{res}
+
+\subsection*{Question 2 -- Par la jacobienne (dualité cinémato-statique)}
+Par le principe des puissances virtuelles, $\tau^T\dot\theta=F^Tv$ pour tout $\dot\theta$, d'où $\tau=J^TF$ (avec $J$ et $F$ exprimés dans le même repère).
+
+\textbf{Dans $R_3$} : ${}^3J_3^{op}=\begin{bmatrix}L_1s_2&0\\L_1c_2+L_2&L_2\end{bmatrix}$ (lignes $v_x,v_y$ de ${}^3J_3$) :
+\[\tau=({}^3J_3^{op})^T\begin{bmatrix}f_x\\f_y\end{bmatrix}=\begin{bmatrix}L_1s_2&L_1c_2+L_2\\0&L_2\end{bmatrix}\begin{bmatrix}f_x\\f_y\end{bmatrix}=\begin{bmatrix}L_1s_2f_x+(L_1c_2+L_2)f_y\\L_2f_y\end{bmatrix}\quad\checkmark\]
+
+\textbf{Force dans $R_0$} :
+\begin{res}
+\[{}^0F={}^0_3R\,{}^3F\ \Rightarrow\ F_x=c_{12}f_x-s_{12}f_y,\qquad F_y=s_{12}f_x+c_{12}f_y.\]
+\end{res}
+Vérification avec $J_3^{op}$ dans $R_0$ :
+\[\tau=(J_3^{op})^T\begin{bmatrix}F_x\\F_y\end{bmatrix}\ \Rightarrow\ 
+\tau_1=-(L_1s_1+L_2s_{12})F_x+(L_1c_1+L_2c_{12})F_y=xF_y-yF_x,\]\[
+\tau_2=L_2(c_{12}F_y-s_{12}F_x).\]
+En remplaçant $F_x,F_y$ on retrouve les mêmes couples. \emph{Interprétation} : $\tau_1=xF_y-yF_x$ est le moment de la force en $O_0$ (bras de levier total), $\tau_2$ son moment au coude.
+
+\subsection*{Question 3 -- Force uniquement selon $\vec X_0$}
+$F_y=0$, $F_x\ne0$ (dans $R_3$ cela impose $s_{12}f_x+c_{12}f_y=0$) :
+\[\tau_1=-(L_1s_1+L_2s_{12})F_x=-y\,F_x,\qquad \tau_2=-L_2s_{12}\,F_x.\]
+\begin{res}
+\[\frac{\tau_1}{\tau_2}=\frac{L_1s_1+L_2s_{12}}{L_2s_{12}}\qquad\text{soit}\qquad L_2s_{12}\,\tau_1=(L_1s_1+L_2s_{12})\,\tau_2\]
+\end{res}
+\begin{rem}
+\begin{itemize}[nosep]
+\item Si l'effecteur est sur l'axe $\vec X_0$ ($y=0$, cas de la trajectoire de la partie 2), alors $\tau_1=0$ : la ligne d'action de la force passe par l'axe 1, seul le moteur 2 travaille.
+\item En singularité ($s_2=0$), $J^T$ n'est plus de rang plein : une force radiale ($f_y=0$, le long du bras) est supportée sans aucun couple moteur (la structure la reprend), à l'inverse de la cinématique où ce sont les vitesses qui divergent.
+\end{itemize}
+\end{rem}
+\end{document}
